@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>문자광고 집행 가능여부 조회</title>
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F8F9FB; font-family: 'Pretendard Variable', 'Noto Sans KR', -apple-system, sans-serif; color: #1A1D23; }
+    input:focus { outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp .35s ease-out forwards; }
+    .dd-item { padding: 9px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .dd-item:hover { background: #EFF6FF; }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+
+const {
+  useState,
+  useMemo,
+  useRef,
+  useEffect
+} = React;
+const RANK_DB = [{
+  name: "삼성물산",
+  rank: 1
+}, {
+  name: "현대건설",
+  rank: 2
+}, {
+  name: "대우건설",
+  rank: 3
+}, {
+  name: "DL이앤씨",
+  aliases: ["디엘이앤씨", "DL E&C"],
+  rank: 4
+}, {
+  name: "GS건설",
+  aliases: ["지에스건설"],
+  rank: 5
+}, {
+  name: "현대엔지니어링",
+  rank: 6
+}, {
+  name: "포스코이앤씨",
+  aliases: ["포스코E&C"],
+  rank: 7
+}, {
+  name: "롯데건설",
+  rank: 8
+}, {
+  name: "SK에코플랜트",
+  rank: 9
+}, {
+  name: "HDC현대산업개발",
+  aliases: ["현대산업개발"],
+  rank: 10
+}, {
+  name: "한화",
+  aliases: ["한화건설"],
+  rank: 11
+}, {
+  name: "호반건설",
+  rank: 12
+}, {
+  name: "DL건설",
+  rank: 13
+}, {
+  name: "두산에너빌리티",
+  rank: 14
+}, {
+  name: "계룡건설산업",
+  aliases: ["계룡건설"],
+  rank: 15
+}, {
+  name: "서희건설",
+  rank: 16
+}, {
+  name: "제일건설",
+  rank: 17
+}, {
+  name: "코오롱글로벌",
+  rank: 18
+}, {
+  name: "태영건설",
+  rank: 19
+}, {
+  name: "KCC건설",
+  rank: 20
+}, {
+  name: "우미건설",
+  rank: 21
+}, {
+  name: "대방건설",
+  rank: 22
+}, {
+  name: "쌍용건설",
+  rank: 23
+}, {
+  name: "금호건설",
+  rank: 24
+}, {
+  name: "두산건설",
+  rank: 25
+}, {
+  name: "한신공영",
+  rank: 26
+}, {
+  name: "효성중공업",
+  rank: 27
+}, {
+  name: "동부건설",
+  rank: 28
+}, {
+  name: "HL디앤아이한라",
+  aliases: ["한라"],
+  rank: 29
+}, {
+  name: "반도건설",
+  rank: 30
+}, {
+  name: "호반산업",
+  rank: 31
+}, {
+  name: "동원개발",
+  rank: 32
+}, {
+  name: "신세계건설",
+  rank: 33
+}, {
+  name: "HJ중공업",
+  rank: 34
+}, {
+  name: "자이씨앤에이",
+  rank: 35
+}, {
+  name: "삼성E&A",
+  aliases: ["삼성엔지니어링"],
+  rank: 36
+}, {
+  name: "비에스한양",
+  rank: 37
+}, {
+  name: "금강주택",
+  rank: 38
+}, {
+  name: "CJ대한통운",
+  rank: 39
+}, {
+  name: "동양건설산업",
+  rank: 40
+}, {
+  name: "SGC이앤씨",
+  rank: 41
+}, {
+  name: "중흥토건",
+  rank: 42
+}, {
+  name: "대광건영",
+  rank: 43
+}, {
+  name: "진흥기업",
+  rank: 44
+}, {
+  name: "동일토건",
+  rank: 45
+}, {
+  name: "라인건설",
+  rank: 46
+}, {
+  name: "HDC화성",
+  rank: 47
+}, {
+  name: "SK에코에너지니어링",
+  rank: 48
+}, {
+  name: "성도이엔씨",
+  aliases: ["성도건설"],
+  rank: 49
+}, {
+  name: "서한",
+  aliases: ["서한건설"],
+  rank: 50
+}, {
+  name: "남광토건",
+  rank: 51
+}, {
+  name: "대보건설",
+  rank: 52
+}, {
+  name: "동문건설",
+  rank: 53
+}, {
+  name: "태영이앤씨",
+  rank: 54
+}, {
+  name: "국동건설",
+  rank: 55
+}, {
+  name: "일성건설",
+  rank: 56
+}, {
+  name: "케이알산업",
+  rank: 57
+}, {
+  name: "IS동서",
+  rank: 58
+}, {
+  name: "강릉기업",
+  rank: 59
+}, {
+  name: "양우건설",
+  rank: 60
+}, {
+  name: "시티건설",
+  rank: 61
+}, {
+  name: "중흥건설",
+  rank: 62
+}, {
+  name: "모아종합건설",
+  rank: 63
+}, {
+  name: "우미개발",
+  rank: 64
+}, {
+  name: "대우건설산업",
+  rank: 65
+}, {
+  name: "대명건설",
+  rank: 66
+}, {
+  name: "일신건영",
+  rank: 67
+}, {
+  name: "신도아건설",
+  rank: 68
+}, {
+  name: "자이에스앤디",
+  rank: 69
+}, {
+  name: "금성백조건설",
+  rank: 70
+}, {
+  name: "대림",
+  aliases: ["대림건설"],
+  rank: 71
+}, {
+  name: "대원",
+  aliases: ["대원건설"],
+  rank: 72
+}, {
+  name: "대규건설",
+  rank: 73
+}, {
+  name: "LT삼보",
+  rank: 74
+}, {
+  name: "금성백조주택",
+  rank: 75
+}, {
+  name: "미래도건설",
+  rank: 76
+}, {
+  name: "금광건업",
+  rank: 77
+}, {
+  name: "삼부토건",
+  rank: 78
+}, {
+  name: "원건설",
+  rank: 79
+}, {
+  name: "강산건설",
+  rank: 80
+}, {
+  name: "에이스건설",
+  rank: 81
+}, {
+  name: "풍림산업",
+  rank: 82
+}, {
+  name: "한화산업",
+  rank: 83
+}, {
+  name: "서해종합건설",
+  rank: 84
+}, {
+  name: "전주종합건설",
+  rank: 85
+}, {
+  name: "DB부동산",
+  rank: 86
+}, {
+  name: "이수건설",
+  rank: 87
+}, {
+  name: "동아건설산업",
+  rank: 88
+}, {
+  name: "하이츠이앤씨",
+  rank: 89
+}, {
+  name: "요진건설산업",
+  rank: 90
+}, {
+  name: "삼환기업",
+  rank: 91
+}, {
+  name: "화성산업",
+  rank: 92
+}, {
+  name: "신우종합개발",
+  rank: 93
+}, {
+  name: "비에스건설",
+  rank: 94
+}, {
+  name: "모에스종합건설",
+  rank: 95
+}, {
+  name: "영진종합건설",
+  rank: 96
+}, {
+  name: "우암건설",
+  rank: 97
+}, {
+  name: "한양건설",
+  rank: 98
+}, {
+  name: "이아르앤씨",
+  rank: 99
+}, {
+  name: "위본건설",
+  rank: 100
+}];
+function searchCompany(q) {
+  if (!q || !q.trim()) return [];
+  const s = q.trim().toLowerCase();
+  return RANK_DB.filter(c => c.name.toLowerCase().includes(s) || c.aliases && c.aliases.some(a => a.toLowerCase().includes(s))).slice(0, 8);
+}
+const AGENCIES_INFO = {
+  biz: {
+    label: "비즈그리다",
+    bg: "#FEFCE8",
+    color: "#A16207",
+    border: "#FDE68A"
+  },
+  dc: {
+    label: "디지털캠프",
+    bg: "#EFF6FF",
+    color: "#1D4ED8",
+    border: "#BFDBFE"
+  },
+  dh: {
+    label: "대홍기획",
+    bg: "#FFF1F2",
+    color: "#BE123C",
+    border: "#FECDD3"
+  }
+};
+const MEDIA = [{
+  name: "KB국민카드",
+  cat: "카드사",
+  rankRule: r => r <= 50 ? "available" : "unavailable",
+  rankDesc: "하도급순위 50위이내",
+  ilbanOk: false,
+  johabNote: "지역주택조합 전체 불가",
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: "CTR및로그분석제공"
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 40"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "신한카드",
+  cat: "카드사",
+  rankRule: () => "available",
+  rankDesc: "순위무관, 부정적기사없으면가능",
+  ilbanOk: true,
+  extra: "부정적기사여부확인",
+  extra2: "신한카드고객만을위한이벤트필요",
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 160", "PUSH 60"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 70"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "삼성카드",
+  cat: "카드사",
+  rankRule: r => r <= 50 ? "available" : "unavailable",
+  rankDesc: "하도급순위 50위이내",
+  ilbanOk: true,
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "롯데카드",
+  cat: "카드사",
+  rankRule: r => r <= 50 ? "available" : "unavailable",
+  rankDesc: "도급순위 상위50위",
+  ilbanOk: true,
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: "CTR데이터제공"
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150", "PUSH 50"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 60"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "우리카드",
+  cat: "카드사",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준(개별확인)",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "하나카드",
+  cat: "카드사",
+  rankRule: (r, reg) => {
+    if (!["수도권", "광역시", "세종시"].includes(reg)) return "unavailable";
+    return r <= 50 ? "available" : "unavailable";
+  },
+  rankDesc: "수도권+광역시+세종시/50위",
+  ilbanOk: true,
+  extra: "회사채등급B0이상",
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150", "PUSH 25"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 50"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "BC카드",
+  cat: "카드사",
+  rankRule: () => "available",
+  rankDesc: "순위무관, 부정적기사없으면가능",
+  ilbanOk: true,
+  extra: "부정적기사여부확인",
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150"],
+    min: "3만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 협의"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "SKT",
+  cat: "통신사",
+  rankRule: (r, reg) => {
+    if (reg === "수도권" && r <= 100) return "available";
+    if (reg !== "수도권" && r <= 150) return "review";
+    return "unavailable";
+  },
+  rankDesc: "수도권100위/지방150위",
+  ilbanOk: true,
+  biz: {
+    types: ["LMS 100", "MMS 120*"],
+    min: "2만건",
+    note: "버튼CTR로그분석"
+  },
+  dc: {
+    types: ["LMS(RCS) 100", "MMS(RCS) 120"],
+    min: "500만원",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 120"],
+    min: "200만원",
+    note: ""
+  }
+}, {
+  name: "KT",
+  cat: "통신사",
+  rankRule: () => "available",
+  rankDesc: "순위무관(분양1년이내)",
+  ilbanOk: true,
+  extra: "분양1년이내",
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: "CTR로그분석제공"
+  },
+  dc: {
+    types: ["LMS 100", "MMS(RCS) 150"],
+    min: "100만원",
+    note: "CTR로그분석제공"
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150"],
+    min: "100만원",
+    note: ""
+  }
+}, {
+  name: "LG U+",
+  cat: "통신사",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준(개별확인)",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: "발송수5~10%서비스"
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150"],
+    min: "500만원",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "엘포인트",
+  cat: "멤버십",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dc: {
+    types: ["LMS 80", "MMS 120"],
+    min: "500만원",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 80", "MMS 120", "PUSH 50", "KAKAO 100"],
+    min: "200만원",
+    note: ""
+  }
+}, {
+  name: "CJ ONE",
+  cat: "멤버십",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150"],
+    min: "500만원",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 100", "KAKAO 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "OK캐쉬백",
+  cat: "멤버십",
+  rankRule: r => r <= 100 ? "available" : "review",
+  rankDesc: "100위이내(이외검토)",
+  ilbanOk: true,
+  johabNote: "지주택일반분양만가능",
+  biz: {
+    types: ["LMS 100", "MMS 120*"],
+    min: "3만건",
+    note: "25.10발송건적용"
+  },
+  dc: null,
+  dh: {
+    types: ["LMS 100", "MMS 150"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "신세계포인트",
+  cat: "멤버십",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: ""
+  },
+  dc: null,
+  dh: {
+    types: ["LMS 100", "MMS 150"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "롯데멤버스",
+  cat: "멤버십",
+  rankRule: r => r <= 100 ? "available" : "unavailable",
+  rankDesc: "도급순위100위이내",
+  ilbanOk: true,
+  biz: {
+    types: ["LMS 80"],
+    min: "5만건",
+    note: ""
+  },
+  dc: null,
+  dh: null
+}, {
+  name: "카카오페이",
+  cat: "기타",
+  rankRule: () => "available",
+  rankDesc: "순위무관",
+  ilbanOk: true,
+  biz: {
+    types: ["카플친 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["PUSH 60", "KAKAO 100"],
+    min: "17만건",
+    note: ""
+  },
+  dh: {
+    types: ["PUSH 60", "KAKAO 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "나이스(NICE)",
+  cat: "기타",
+  rankRule: r => {
+    if (r <= 100) return "available";
+    if (r <= 200) return "review";
+    return "unavailable";
+  },
+  rankDesc: "100위이내(최대200위검토)",
+  ilbanOk: true,
+  johabNote: "조합원모집불가/일반분양가능",
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: "타겟할증"
+  },
+  dh: {
+    types: ["LMS 100", "MMS 250"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "호갱노노",
+  cat: "기타",
+  rankRule: () => "available",
+  rankDesc: "순위무관",
+  ilbanOk: true,
+  biz: {
+    types: ["카플친 150"],
+    min: "3.3만",
+    note: "최소500만원"
+  },
+  dc: {
+    types: ["KAKAO 170"],
+    min: "1만건",
+    note: ""
+  },
+  dh: {
+    types: ["PUSH 100", "KAKAO 200"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "직방",
+  cat: "기타",
+  rankRule: () => "available",
+  rankDesc: "순위무관",
+  ilbanOk: true,
+  biz: null,
+  dc: {
+    types: ["KAKAO 120"],
+    min: "1만건",
+    note: ""
+  },
+  dh: {
+    types: ["PUSH 100", "KAKAO 150*"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "T맵(TMAP)",
+  cat: "모빌리티",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "3만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 100", "MMS 150", "PUSH 50"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "MMS 150", "PUSH 50"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "스마트스코어",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dc: {
+    types: ["LMS 100", "PUSH 100"],
+    min: "5만건",
+    note: ""
+  },
+  dh: {
+    types: ["LMS 100", "PUSH 100", "KAKAO 100"],
+    min: "300만원",
+    note: ""
+  }
+}, {
+  name: "사람인",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS(개인) 100", "LMS(기업) 200"],
+    min: "5만건",
+    note: ""
+  },
+  dc: null,
+  dh: {
+    types: ["LMS 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "모두의주차장",
+  cat: "모빌리티",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dc: null,
+  dh: {
+    types: ["PUSH 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "H.POINT",
+  cat: "멤버십",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 100", "MMS 150", "PUSH 80"],
+    min: "5만건",
+    note: ""
+  }
+}, {
+  name: "SSG PAY",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 100", "PUSH 50"],
+    min: "5만건",
+    note: ""
+  }
+}, {
+  name: "T멤버십",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["PUSH 10"],
+    min: "60만건",
+    note: ""
+  }
+}, {
+  name: "롯데온",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100", "MMS 150"],
+    min: "5만건",
+    note: ""
+  },
+  dc: {
+    types: ["LMS 80", "MMS 120", "KAKAO 80"],
+    min: "5만건",
+    note: ""
+  },
+  dh: null
+}, {
+  name: "트래블월렛",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["PUSH 100"],
+    min: "100만원",
+    note: ""
+  }
+}, {
+  name: "마이리얼트립",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["PUSH 150", "KAKAO 150"],
+    min: "3.3만건",
+    note: "타겟할증"
+  }
+}, {
+  name: "LG라이프케어",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 120", "MMS 150", "PUSH 80", "KAKAO 120"],
+    min: "200만원",
+    note: ""
+  }
+}, {
+  name: "엑스골프",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 100", "PUSH 40", "KAKAO 100"],
+    min: "500만원",
+    note: ""
+  }
+}, {
+  name: "베이비뉴스",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 140", "MMS 200"],
+    min: "5만건",
+    note: "논타겟(2040여성)"
+  }
+}, {
+  name: "일등맘",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 320", "MMS 440"],
+    min: "5만건",
+    note: "여성/육아/뷰티"
+  }
+}, {
+  name: "앙쥬",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: null,
+  dh: null,
+  dc: {
+    types: ["LMS 250"],
+    min: "1만건",
+    note: "자녀연령/임산부"
+  }
+}, {
+  name: "제로페이",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "2만건",
+    note: ""
+  },
+  dc: null,
+  dh: null
+}, {
+  name: "GS&point",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: ""
+  },
+  dc: null,
+  dh: null
+}, {
+  name: "yes24",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 150"],
+    min: "5만건",
+    note: ""
+  },
+  dc: null,
+  dh: null
+}, {
+  name: "교보문고",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 150"],
+    min: "5만건",
+    note: "CTR제공"
+  },
+  dc: null,
+  dh: null
+}, {
+  name: "경기지역화폐",
+  cat: "기타",
+  rankRule: () => "unknown",
+  rankDesc: "별도기준",
+  ilbanOk: false,
+  biz: {
+    types: ["LMS 100"],
+    min: "5만건",
+    note: "타겟당+10원"
+  },
+  dc: null,
+  dh: null
+}];
+function parseType(str) {
+  const parts = str.split(" ");
+  const name = parts.slice(0, -1).join(" ");
+  const priceStr = parts[parts.length - 1];
+  const isPromo = priceStr.endsWith("*");
+  const clean = priceStr.replace("*", "");
+  const price = isNaN(parseInt(clean)) ? clean : parseInt(clean) + "원";
+  return {
+    name,
+    price,
+    isPromo
+  };
+}
+function detectJohab(q) {
+  if (!q) return false;
+  const s = q.trim();
+  return s.includes("조합") || s.includes("지주택") || s.endsWith("주택조합");
+}
+function StatusBadge({
+  status
+}) {
+  const map = {
+    available: {
+      bg: "#0D9F6E",
+      label: "가능"
+    },
+    review: {
+      bg: "#F59E0B",
+      label: "검토"
+    },
+    unavailable: {
+      bg: "#EF4444",
+      label: "불가"
+    },
+    unknown: {
+      bg: "#6B7280",
+      label: "확인"
+    }
+  };
+  const c = map[status] || map.unknown;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "2px 8px",
+      borderRadius: 999,
+      fontSize: 10,
+      fontWeight: 700,
+      background: c.bg,
+      color: "#fff",
+      whiteSpace: "nowrap"
+    }
+  }, c.label);
+}
+function JohabBadge({
+  media,
+  johabType
+}) {
+  const blocked = johabType === "recruit" || !media.ilbanOk;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "2px 6px",
+      borderRadius: 4,
+      fontSize: 9,
+      fontWeight: 700,
+      background: blocked ? "#FEE2E2" : "#D1FAE5",
+      color: blocked ? "#DC2626" : "#065F46"
+    }
+  }, blocked ? "불가" : "가능");
+}
+function TypeBadge({
+  name
+}) {
+  let bg = "#E0F2FE";
+  let co = "#0369A1";
+  if (name.includes("MMS")) {
+    bg = "#EDE9FE";
+    co = "#7C3AED";
+  } else if (name.includes("KAKAO") || name.includes("카플친")) {
+    bg = "#FEF3C7";
+    co = "#B45309";
+  } else if (name.includes("PUSH")) {
+    bg = "#FFF7ED";
+    co = "#C2410C";
+  }
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "1px 6px",
+      borderRadius: 4,
+      background: bg,
+      color: co,
+      fontSize: 9,
+      fontWeight: 700,
+      whiteSpace: "nowrap"
+    }
+  }, name);
+}
+function CatBadge({
+  cat
+}) {
+  const map = {
+    "카드사": {
+      bg: "#DBEAFE",
+      co: "#1D4ED8"
+    },
+    "통신사": {
+      bg: "#E0E7FF",
+      co: "#4338CA"
+    },
+    "멤버십": {
+      bg: "#FEF3C7",
+      co: "#B45309"
+    },
+    "모빌리티": {
+      bg: "#FFF7ED",
+      co: "#C2410C"
+    }
+  };
+  const c = map[cat] || {
+    bg: "#F3F4F6",
+    co: "#475569"
+  };
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "1px 5px",
+      borderRadius: 4,
+      fontSize: 8,
+      fontWeight: 600,
+      whiteSpace: "nowrap",
+      background: c.bg,
+      color: c.co
+    }
+  }, cat);
+}
+function App() {
+  const [query, setQuery] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [region, setRegion] = useState("수도권");
+  const [johabType, setJohabType] = useState("recruit");
+  const [showResult, setShowResult] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [agency, setAgency] = useState("all");
+  const [sigoQuery, setSigoQuery] = useState("");
+  const [selectedSigo, setSelectedSigo] = useState(null);
+  const [showSigoDropdown, setShowSigoDropdown] = useState(false);
+  const [sigoManualRank, setSigoManualRank] = useState("");
+  const [sigoUseManual, setSigoUseManual] = useState(false);
+  const [useManual, setUseManual] = useState(false);
+  const [manualRank, setManualRank] = useState("");
+  const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const sigoInputRef = useRef(null);
+  const sigoDropdownRef = useRef(null);
+  const suggestions = useMemo(() => searchCompany(query), [query]);
+  const sigoSuggestions = useMemo(() => searchCompany(sigoQuery), [sigoQuery]);
+  const isJohab = useMemo(() => detectJohab(query), [query]);
+  useEffect(() => {
+    const handler = e => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target) && inputRef.current && !inputRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+      if (sigoDropdownRef.current && !sigoDropdownRef.current.contains(e.target) && sigoInputRef.current && !sigoInputRef.current.contains(e.target)) {
+        setShowSigoDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const rankNum = useMemo(() => {
+    if (isJohab) {
+      if (selectedSigo) return selectedSigo.rank;
+      if (sigoUseManual) return parseInt(sigoManualRank) || 0;
+      return 0;
+    }
+    if (selectedCompany) return selectedCompany.rank;
+    if (useManual) return parseInt(manualRank) || 0;
+    return 0;
+  }, [isJohab, selectedSigo, sigoUseManual, sigoManualRank, selectedCompany, useManual, manualRank]);
+  const agencyKeys = useMemo(() => agency === "all" ? ["biz", "dc", "dh"] : [agency], [agency]);
+  const filtered = useMemo(() => {
+    return MEDIA.filter(m => agencyKeys.some(k => m[k] != null));
+  }, [agencyKeys]);
+  const results = useMemo(() => {
+    if (rankNum < 1) return [];
+    return filtered.map(m => {
+      let status = m.rankRule(rankNum, region);
+      if (isJohab) {
+        if (johabType === "recruit") status = "unavailable";else if (!m.ilbanOk) status = "unavailable";
+      }
+      return {
+        ...m,
+        status
+      };
+    });
+  }, [rankNum, region, isJohab, johabType, filtered]);
+  const sortedResults = useMemo(() => {
+    const order = {
+      available: 0,
+      review: 1,
+      unknown: 2,
+      unavailable: 3
+    };
+    return [...results].sort((a, b) => (order[a.status] || 4) - (order[b.status] || 4));
+  }, [results]);
+  const counts = useMemo(() => {
+    const c = {
+      available: 0,
+      review: 0,
+      unknown: 0,
+      unavailable: 0
+    };
+    results.forEach(r => {
+      c[r.status] = (c[r.status] || 0) + 1;
+    });
+    return c;
+  }, [results]);
+  const handleSelectCompany = c => {
+    setSelectedCompany(c);
+    setQuery(c.name);
+    setShowDropdown(false);
+    setUseManual(false);
+    setShowResult(false);
+  };
+  const handleSelectSigo = c => {
+    setSelectedSigo(c);
+    setSigoQuery(c.name);
+    setShowSigoDropdown(false);
+    setSigoUseManual(false);
+    setShowResult(false);
+  };
+
+  // Build table rows
+  const tableRows = useMemo(() => {
+    const allRows = [];
+    sortedResults.forEach(m => {
+      const activeKeys = agencyKeys.filter(k => m[k] != null);
+      if (activeKeys.length === 0) return;
+      activeKeys.forEach((ak, idx) => {
+        const data = m[ak];
+        const info = AGENCIES_INFO[ak];
+        const isFirst = idx === 0;
+        const span = activeKeys.length;
+        const parsed = data.types.map(s => parseType(s));
+        allRows.push({
+          key: m.name + "_" + ak,
+          m,
+          data,
+          info,
+          isFirst,
+          span,
+          parsed,
+          ak
+        });
+      });
+    });
+    return allRows;
+  }, [sortedResults, agencyKeys]);
+  const S = {
+    card: {
+      bg: "#fff",
+      borderRadius: 14,
+      padding: "20px",
+      boxShadow: "0 1px 8px rgba(0,0,0,.06)"
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: "#F8F9FB",
+      fontFamily: "'Pretendard','Noto Sans KR',-apple-system,sans-serif",
+      color: "#1A1D23"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        input:focus { outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .fade-up { animation: fadeUp .35s ease-out forwards; }
+        .dd-item { padding: 9px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .dd-item:hover { background: #EFF6FF; }
+      `), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "linear-gradient(135deg,#1E293B,#334155)",
+      padding: "28px 24px 24px",
+      color: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 960,
+      margin: "0 auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 600,
+      color: "#94A3B8",
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      marginBottom: 4
+    }
+  }, "SMS AD Feasibility Checker"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800
+    }
+  }, "\uBB38\uC790\uAD11\uACE0 \uC9D1\uD589 \uAC00\uB2A5\uC5EC\uBD80 \uC870\uD68C"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 12,
+      color: "#94A3B8",
+      marginTop: 4
+    }
+  }, "\uBE44\uC988\uADF8\uB9AC\uB2E4 \xB7 \uB514\uC9C0\uD138\uCEA0\uD504 \xB7 \uB300\uD64D\uAE30\uD68D 3\uC0AC \uB2E8\uAC00 \uBE44\uAD50"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 960,
+      margin: "0 auto",
+      padding: "20px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: S.card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#475569",
+      marginBottom: 5
+    }
+  }, "\uB300\uD589\uC0AC \uC120\uD0DD"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap"
+    }
+  }, [{
+    k: "all",
+    l: "전체 비교"
+  }, {
+    k: "biz",
+    l: "비즈그리다"
+  }, {
+    k: "dc",
+    l: "디지털캠프"
+  }, {
+    k: "dh",
+    l: "대홍기획"
+  }].map(a => /*#__PURE__*/React.createElement("button", {
+    key: a.k,
+    onClick: () => {
+      setAgency(a.k);
+      setShowResult(false);
+    },
+    style: {
+      padding: "6px 14px",
+      borderRadius: 7,
+      border: agency === a.k ? "2px solid #2563EB" : "1.5px solid #E2E8F0",
+      background: agency === a.k ? "#EFF6FF" : "#fff",
+      color: agency === a.k ? "#2563EB" : "#64748B",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, a.l)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#475569",
+      marginBottom: 5,
+      flexWrap: "wrap"
+    }
+  }, isJohab ? "① 조합명" : "건설사 검색", selectedCompany && !isJohab && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#0D9F6E",
+      fontSize: 10
+    }
+  }, "\uC790\uB3D9\uB9E4\uCE6D"), isJohab && /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#FEF3C7",
+      color: "#B45309",
+      padding: "1px 6px",
+      borderRadius: 4,
+      fontSize: 9,
+      fontWeight: 700,
+      border: "1px solid #FDE68A"
+    }
+  }, "\uC870\uD569\uAC10\uC9C0")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    type: "text",
+    value: query,
+    onChange: e => {
+      setQuery(e.target.value);
+      setSelectedCompany(null);
+      setShowDropdown(true);
+      setShowResult(false);
+      setUseManual(false);
+      if (!detectJohab(e.target.value)) {
+        setSigoQuery("");
+        setSelectedSigo(null);
+        setSigoUseManual(false);
+      }
+    },
+    onFocus: () => query.length > 0 && !isJohab && setShowDropdown(true),
+    placeholder: "\uC608) \uD604\uB300\uAC74\uC124, \uD669\uD559\uB3D9\uCCAD\uACC4\uC9C0\uC5ED\uC8FC\uD0DD\uC870\uD569...",
+    style: {
+      width: "100%",
+      padding: "10px 14px",
+      paddingRight: selectedCompany ? 76 : 14,
+      borderRadius: 9,
+      border: isJohab ? "1.5px solid #F59E0B" : selectedCompany ? "1.5px solid #0D9F6E" : "1.5px solid #E2E8F0",
+      fontSize: 14,
+      fontWeight: 500,
+      background: isJohab ? "#FFFBEB" : selectedCompany ? "#F0FDF9" : "#F8FAFC"
+    }
+  }), selectedCompany && !isJohab && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#2563EB",
+      color: "#fff",
+      padding: "3px 10px",
+      borderRadius: 6,
+      fontSize: 12,
+      fontWeight: 800
+    }
+  }, selectedCompany.rank, "\uC704"))), !isJohab && showDropdown && suggestions.length > 0 && !selectedCompany && /*#__PURE__*/React.createElement("div", {
+    ref: dropdownRef,
+    style: {
+      position: "absolute",
+      top: "100%",
+      left: 0,
+      right: 0,
+      marginTop: 4,
+      background: "#fff",
+      borderRadius: 9,
+      border: "1.5px solid #E2E8F0",
+      boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+      zIndex: 100,
+      maxHeight: 280,
+      overflowY: "auto"
+    }
+  }, suggestions.map(c => /*#__PURE__*/React.createElement("div", {
+    key: c.rank,
+    className: "dd-item",
+    onClick: () => handleSelectCompany(c)
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 600,
+      fontSize: 13
+    }
+  }, c.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#F1F5F9",
+      padding: "2px 10px",
+      borderRadius: 6,
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#2563EB"
+    }
+  }, c.rank, "\uC704")))), !isJohab && showDropdown && query.length > 0 && suggestions.length === 0 && !selectedCompany && /*#__PURE__*/React.createElement("div", {
+    ref: dropdownRef,
+    style: {
+      position: "absolute",
+      top: "100%",
+      left: 0,
+      right: 0,
+      marginTop: 4,
+      background: "#fff",
+      borderRadius: 9,
+      border: "1.5px solid #FDE68A",
+      boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+      zIndex: 100,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#92400E",
+      marginBottom: 8
+    }
+  }, "DB(100\uC704)\uC5D0 \uC5C6\uC74C"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setUseManual(true);
+      setShowDropdown(false);
+    },
+    style: {
+      padding: "6px 14px",
+      borderRadius: 7,
+      border: "1.5px solid #F59E0B",
+      background: "#FFFBEB",
+      color: "#92400E",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, "\uC9C1\uC811 \uC785\uB825"))), !isJohab && useManual && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      padding: 12,
+      background: "#FFFBEB",
+      borderRadius: 9,
+      border: "1px solid #FDE68A"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: manualRank,
+    onChange: e => {
+      setManualRank(e.target.value);
+      setShowResult(false);
+    },
+    placeholder: "\uB3C4\uAE09\uC21C\uC704 (\uC704)",
+    min: "1",
+    autoFocus: true,
+    style: {
+      width: "100%",
+      padding: "8px 12px",
+      borderRadius: 7,
+      border: "1.5px solid #FDE68A",
+      fontSize: 13,
+      background: "#fff"
+    }
+  })), isJohab && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14,
+      padding: 14,
+      background: "#F0F9FF",
+      borderRadius: 10,
+      border: "1.5px solid #BAE6FD",
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#0369A1",
+      marginBottom: 5
+    }
+  }, "\u2461 \uC2DC\uACF5\uC0AC \uAC80\uC0C9", selectedSigo && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#0D9F6E",
+      fontSize: 10
+    }
+  }, selectedSigo.rank, "\uC704 \uB9E4\uCE6D")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: sigoInputRef,
+    type: "text",
+    value: sigoQuery,
+    onChange: e => {
+      setSigoQuery(e.target.value);
+      setSelectedSigo(null);
+      setShowSigoDropdown(true);
+      setShowResult(false);
+      setSigoUseManual(false);
+    },
+    onFocus: () => sigoQuery.length > 0 && setShowSigoDropdown(true),
+    placeholder: "\uC2DC\uACF5\uC0AC\uBA85 (\uC608: \uD604\uB300\uAC74\uC124...)",
+    style: {
+      width: "100%",
+      padding: "10px 14px",
+      paddingRight: selectedSigo ? 76 : 14,
+      borderRadius: 9,
+      border: selectedSigo ? "1.5px solid #0D9F6E" : "1.5px solid #E2E8F0",
+      fontSize: 14,
+      fontWeight: 500,
+      background: selectedSigo ? "#F0FDF9" : "#fff"
+    }
+  }), selectedSigo && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#2563EB",
+      color: "#fff",
+      padding: "3px 10px",
+      borderRadius: 6,
+      fontSize: 12,
+      fontWeight: 800
+    }
+  }, selectedSigo.rank, "\uC704"))), showSigoDropdown && sigoSuggestions.length > 0 && !selectedSigo && /*#__PURE__*/React.createElement("div", {
+    ref: sigoDropdownRef,
+    style: {
+      position: "absolute",
+      left: 14,
+      right: 14,
+      marginTop: 4,
+      background: "#fff",
+      borderRadius: 9,
+      border: "1.5px solid #E2E8F0",
+      boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+      zIndex: 100,
+      maxHeight: 240,
+      overflowY: "auto"
+    }
+  }, sigoSuggestions.map(c => /*#__PURE__*/React.createElement("div", {
+    key: c.rank,
+    className: "dd-item",
+    onClick: () => handleSelectSigo(c)
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 600,
+      fontSize: 13
+    }
+  }, c.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#F1F5F9",
+      padding: "2px 10px",
+      borderRadius: 6,
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#2563EB"
+    }
+  }, c.rank, "\uC704")))), showSigoDropdown && sigoQuery.length > 0 && sigoSuggestions.length === 0 && !selectedSigo && /*#__PURE__*/React.createElement("div", {
+    ref: sigoDropdownRef,
+    style: {
+      position: "absolute",
+      left: 14,
+      right: 14,
+      marginTop: 4,
+      background: "#fff",
+      borderRadius: 9,
+      border: "1.5px solid #FDE68A",
+      boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+      zIndex: 100,
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#92400E",
+      marginBottom: 6
+    }
+  }, "DB\uC5D0 \uC5C6\uC74C"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSigoUseManual(true);
+      setShowSigoDropdown(false);
+    },
+    style: {
+      padding: "6px 14px",
+      borderRadius: 7,
+      border: "1.5px solid #F59E0B",
+      background: "#FFFBEB",
+      color: "#92400E",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, "\uC9C1\uC811 \uC785\uB825")), sigoUseManual && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: sigoManualRank,
+    onChange: e => {
+      setSigoManualRank(e.target.value);
+      setShowResult(false);
+    },
+    placeholder: "\uC2DC\uACF5\uC0AC \uB3C4\uAE09\uC21C\uC704 (\uC704)",
+    min: "1",
+    autoFocus: true,
+    style: {
+      width: "100%",
+      padding: "8px 12px",
+      borderRadius: 7,
+      border: "1.5px solid #FDE68A",
+      fontSize: 13,
+      background: "#FFFBEB"
+    }
+  }))), isJohab && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14,
+      padding: 12,
+      background: "#FEF9EE",
+      borderRadius: 9,
+      border: "1.5px solid #F59E0B"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#92400E",
+      marginBottom: 6
+    }
+  }, "\u2462 \uBD84\uC591 \uC720\uD615"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, [{
+    k: "recruit",
+    l: "조합원 모집",
+    d: "전매체 불가",
+    c: "#EF4444",
+    bg: "#FEF2F2"
+  }, {
+    k: "ilban",
+    l: "일반분양",
+    d: "KB국민카드외 지정매체 가능",
+    c: "#0D9F6E",
+    bg: "#ECFDF5"
+  }].map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.k,
+    onClick: () => {
+      setJohabType(o.k);
+      setShowResult(false);
+    },
+    style: {
+      flex: 1,
+      padding: "8px 10px",
+      borderRadius: 7,
+      border: johabType === o.k ? `2px solid ${o.c}` : "1.5px solid #E2E8F0",
+      background: johabType === o.k ? o.bg : "#fff",
+      cursor: "pointer",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: johabType === o.k ? o.c : "#475569"
+    }
+  }, o.l), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: "#94A3B8",
+      marginTop: 1
+    }
+  }, o.d))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#475569",
+      marginBottom: 5
+    }
+  }, isJohab ? "④ 지역" : "지역"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap"
+    }
+  }, ["수도권", "광역시", "세종시", "지방"].map(r => /*#__PURE__*/React.createElement("button", {
+    key: r,
+    onClick: () => {
+      setRegion(r);
+      setShowResult(false);
+    },
+    style: {
+      padding: "6px 16px",
+      borderRadius: 7,
+      border: region === r ? "1.5px solid #2563EB" : "1.5px solid #E2E8F0",
+      background: region === r ? "#EFF6FF" : "#fff",
+      color: region === r ? "#2563EB" : "#64748B",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, r)))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (rankNum > 0) setShowResult(true);
+    },
+    disabled: rankNum < 1,
+    style: {
+      marginTop: 16,
+      width: "100%",
+      padding: "11px",
+      borderRadius: 9,
+      border: "none",
+      background: rankNum < 1 ? "#CBD5E1" : "linear-gradient(135deg,#2563EB,#1D4ED8)",
+      color: "#fff",
+      fontSize: 14,
+      fontWeight: 700,
+      cursor: rankNum < 1 ? "not-allowed" : "pointer"
+    }
+  }, "\uC870\uD68C\uD558\uAE30")), showResult && rankNum > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "fade-up",
+    style: {
+      marginTop: 20
+    }
+  }, isJohab && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 14,
+      padding: "12px 16px",
+      background: johabType === "recruit" ? "#FEE2E2" : "#D1FAE5",
+      borderRadius: 9,
+      border: johabType === "recruit" ? "1.5px solid #EF4444" : "1.5px solid #0D9F6E"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 800,
+      color: johabType === "recruit" ? "#991B1B" : "#065F46",
+      marginBottom: 2
+    }
+  }, johabType === "recruit" ? "🚫 조합원 모집 — 전 매체 집행 불가 (참고용)" : "✅ 일반분양 — KB국민카드 제외 지정매체 가능")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(4,1fr)",
+      gap: 8,
+      marginBottom: 16
+    }
+  }, [{
+    l: "가능",
+    c: counts.available,
+    co: "#0D9F6E",
+    bg: "#ECFDF5"
+  }, {
+    l: "검토",
+    c: counts.review,
+    co: "#F59E0B",
+    bg: "#FFFBEB"
+  }, {
+    l: "확인",
+    c: counts.unknown,
+    co: "#6B7280",
+    bg: "#F3F4F6"
+  }, {
+    l: "불가",
+    c: counts.unavailable,
+    co: "#EF4444",
+    bg: "#FEF2F2"
+  }].map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.l,
+    style: {
+      background: s.bg,
+      borderRadius: 9,
+      padding: "12px 10px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 22,
+      fontWeight: 800,
+      color: s.co
+    }
+  }, s.c), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 600,
+      color: s.co
+    }
+  }, s.l)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#1E293B",
+      borderRadius: 9,
+      padding: "12px 16px",
+      marginBottom: 14,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 6,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#94A3B8",
+      fontSize: 10
+    }
+  }, isJohab ? "조합" : "건설사"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#fff",
+      fontWeight: 800
+    }
+  }, isJohab ? query : selectedCompany ? selectedCompany.name : query || "직접"), isJohab && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: johabType === "recruit" ? "#EF4444" : "#0D9F6E",
+      color: "#fff",
+      padding: "1px 6px",
+      borderRadius: 4,
+      fontSize: 9,
+      fontWeight: 700
+    }
+  }, johabType === "recruit" ? "조합원모집" : "일반분양"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#94A3B8",
+      fontSize: 10
+    }
+  }, "\uC2DC\uACF5\uC0AC"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#60A5FA",
+      fontWeight: 800
+    }
+  }, selectedSigo ? selectedSigo.name : sigoQuery || "직접"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#94A3B8",
+      fontSize: 10
+    }
+  }, "\uC21C\uC704 "), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#60A5FA",
+      fontWeight: 800
+    }
+  }, rankNum, "\uC704"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#475569",
+      fontSize: 9
+    }
+  }, " ('25)")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#94A3B8",
+      fontSize: 10
+    }
+  }, "\uC9C0\uC5ED "), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#60A5FA",
+      fontWeight: 800
+    }
+  }, region)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 12,
+      boxShadow: "0 1px 8px rgba(0,0,0,.06)",
+      overflowX: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: "100%",
+      borderCollapse: "collapse",
+      fontSize: 12,
+      minWidth: 800
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    style: {
+      background: "#F1F5F9"
+    }
+  }, ["매체사", "분류", "상태", ...(isJohab ? ["조합"] : []), "대행사", "유형", "단가(VAT별도)", "최소집행", "비고"].map(h => /*#__PURE__*/React.createElement("th", {
+    key: h,
+    style: {
+      padding: "10px 6px",
+      textAlign: h === "매체사" || h === "비고" ? "left" : "center",
+      fontWeight: 700,
+      color: "#475569",
+      fontSize: 9,
+      borderBottom: "2px solid #E2E8F0",
+      whiteSpace: "nowrap"
+    }
+  }, h)))), /*#__PURE__*/React.createElement("tbody", null, tableRows.map(row => {
+    const {
+      key,
+      m,
+      data,
+      info,
+      isFirst,
+      span,
+      parsed
+    } = row;
+    return /*#__PURE__*/React.createElement("tr", {
+      key: key,
+      style: {
+        borderBottom: "1px solid #F1F5F9",
+        background: m.status === "unavailable" ? "#FAFAFA" : "#fff",
+        opacity: m.status === "unavailable" ? 0.5 : 1
+      }
+    }, isFirst && /*#__PURE__*/React.createElement("td", {
+      rowSpan: span,
+      style: {
+        padding: "7px 6px",
+        fontWeight: 700,
+        fontSize: 11,
+        whiteSpace: "nowrap",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, m.name), isFirst && /*#__PURE__*/React.createElement("td", {
+      rowSpan: span,
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement(CatBadge, {
+      cat: m.cat
+    })), isFirst && /*#__PURE__*/React.createElement("td", {
+      rowSpan: span,
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement(StatusBadge, {
+      status: m.status
+    })), isFirst && isJohab && /*#__PURE__*/React.createElement("td", {
+      rowSpan: span,
+      style: {
+        padding: "7px 3px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement(JohabBadge, {
+      media: m,
+      johabType: johabType
+    })), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        padding: "1px 5px",
+        borderRadius: 4,
+        fontSize: 8,
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: info.bg,
+        color: info.color,
+        border: `1px solid ${info.border}`
+      }
+    }, info.label)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: 2
+      }
+    }, parsed.map(p => /*#__PURE__*/React.createElement(TypeBadge, {
+      key: p.name,
+      name: p.name
+    })))), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        borderRight: "1px solid #F1F5F9"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 1
+      }
+    }, parsed.map(p => /*#__PURE__*/React.createElement("span", {
+      key: p.name,
+      style: {
+        fontSize: 11,
+        fontWeight: 600,
+        whiteSpace: "nowrap"
+      }
+    }, p.price, p.isPromo && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "#EF4444",
+        fontSize: 8,
+        marginLeft: 2
+      }
+    }, "*\uD504\uB85C\uBAA8\uC158"))))), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "7px 4px",
+        textAlign: "center",
+        fontWeight: 600,
+        fontSize: 11,
+        borderRight: "1px solid #F1F5F9",
+        whiteSpace: "nowrap"
+      }
+    }, data.min), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "7px 4px",
+        fontSize: 9,
+        color: "#64748B",
+        lineHeight: 1.4,
+        maxWidth: 180
+      }
+    }, isFirst && /*#__PURE__*/React.createElement("div", null, m.rankDesc), isFirst && isJohab && m.johabNote && /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: "#DC2626",
+        fontWeight: 700,
+        marginTop: 1
+      }
+    }, m.johabNote), isFirst && m.extra && /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: "#EF4444",
+        fontWeight: 600,
+        marginTop: 1
+      }
+    }, m.extra), isFirst && m.extra2 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: "#EF4444",
+        fontWeight: 700,
+        marginTop: 1
+      }
+    }, m.extra2), data.note && /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: "#2563EB",
+        marginTop: 1
+      }
+    }, data.note)));
+  })))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      padding: "10px 14px",
+      background: "#FFFBEB",
+      borderRadius: 7,
+      border: "1px solid #FDE68A"
+    }
+  }, /*#__PURE__*/React.createElement("ul", {
+    style: {
+      fontSize: 10,
+      color: "#78716C",
+      lineHeight: 1.6,
+      paddingLeft: 14,
+      margin: 0
+    }
+  }, /*#__PURE__*/React.createElement("li", null, "\uB3C4\uAE09\uC21C\uC704: 2025\uB144 \uAD6D\uD1A0\uAD50\uD1B5\uBD80 \uC2DC\uACF5\uB2A5\uB825\uD3C9\uAC00 \uAE30\uC900"), /*#__PURE__*/React.createElement("li", null, "\uB2E8\uAC00 VAT \uBCC4\uB3C4. \uB300\uD589\uC0AC\uBCC4 \uB3D9\uC77C \uB9E4\uCCB4\uB3C4 \uB2E8\uAC00/\uCD5C\uC18C\uC9D1\uD589/\uC0C1\uD488\uC774 \uB2E4\uB97C \uC218 \uC788\uC74C"), isJohab && johabType === "recruit" && /*#__PURE__*/React.createElement("li", {
+    style: {
+      color: "#DC2626",
+      fontWeight: 700
+    }
+  }, "\uC870\uD569\uC6D0 \uBAA8\uC9D1 \uC2DC \uC804 \uB9E4\uCCB4 \uC9D1\uD589 \uBD88\uAC00"), isJohab && johabType === "ilban" && /*#__PURE__*/React.createElement("li", {
+    style: {
+      color: "#DC2626",
+      fontWeight: 700
+    }
+  }, "KB\uAD6D\uBBFC\uCE74\uB4DC\uB294 \uC9C0\uC5ED\uC8FC\uD0DD\uC870\uD569 \uC804\uCCB4 \uBD88\uAC00"))))));
+}
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App, null));  </script>
+</body>
+</html>
